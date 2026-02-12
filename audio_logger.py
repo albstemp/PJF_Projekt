@@ -32,6 +32,7 @@ class AudioLogger:
     a: NDArray[np.float64]
 
     def __init__(self, device_id: Optional[int] = None, fs: int = 48000) -> None:
+        print("Inicjalizacja AudioLogger...")
         self.fs = fs
         self.device_id = device_id
         self.output_dir = "samples_pro"
@@ -47,6 +48,7 @@ class AudioLogger:
         self.key_timeout = 0.2
         self._prepare_storage()
         self.b, self.a = butter(4, [200 / (fs / 2), 10000 / (fs / 2)], btype='band')
+        print("Inicjalizacja zakończona.")
 
     def _prepare_storage(self) -> None:
         os.makedirs(self.output_dir, exist_ok=True)
@@ -132,6 +134,8 @@ class AudioLogger:
         wav_data: NDArray[np.int16] = (data * 32767).astype(np.int16)
         wavfile.write(path, self.fs, wav_data)
 
+        print(f"Zapisano: {key_name} (peak: {peak:.3f}, rms: {rms:.3f})")
+
         try:
             char_code: int = ord(key_name[0]) if len(key_name) == 1 else 0
             with open(self.kbd_output, "ab") as f:
@@ -150,6 +154,24 @@ class AudioLogger:
                 self.last_key_time = time.time()
 
     def run(self) -> None:
+        print("AUDIO LOGGER - Nagrywanie dźwięków klawiszy\n")
+        print(f"Częstotliwość próbkowania: {self.fs} Hz")
+        print(f"Próg detekcji: {self.threshold}")
+        print(f"Katalog wyjściowy: {self.output_dir}")
+        print(f"Plik CSV: {self.csv_path}")
+
+        try:
+            devices = sd.query_devices()
+            if self.device_id is not None:
+                print(f"Urządzenie audio: {devices[self.device_id]['name']}")
+            else:
+                print(f"Urządzenie audio: {devices[sd.default.device[0]]['name']} (domyślne)")
+        except Exception as e:
+            print(f"Ostrzeżenie: nie można odczytać informacji o urządzeniu: {e}")
+
+        print("\nNaciśnij klawisze, aby nagrać ich dźwięki...")
+        print("\n")
+
         try:
             with sd.InputStream(
                     channels=1,
@@ -157,10 +179,16 @@ class AudioLogger:
                     callback=self._audio_callback,
                     device=self.device_id
             ):
+                print("Strumień audio uruchomiony")
+                print("Nasłuchiwanie klawiatury aktywne\n")
                 with keyboard.Listener(on_press=self.on_press) as listener:
                     listener.join()
         except KeyboardInterrupt:
-            pass
+            print("\n\nZakończono nagrywanie.")
+        except Exception as e:
+            print(f"\n\nBłąd: {e}")
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

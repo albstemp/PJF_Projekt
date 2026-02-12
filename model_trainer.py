@@ -1,11 +1,13 @@
+import os
+os.environ['KERAS_BACKEND'] = 'jax'
+
 import pandas as pd
 import numpy as np
-import os
 import pickle
-import tensorflow as tf
-from tensorflow.keras import layers, models, callbacks
+import keras
+from keras import layers, models, callbacks
 from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from keras.utils import load_img, img_to_array
 from typing import Tuple, Optional, Any, List, Union
 from numpy.typing import NDArray
 
@@ -50,7 +52,6 @@ class AcousticModelTrainer:
         valid_keys: pd.Index = counts[counts >= min_samples_threshold].index
 
         df_clean: pd.DataFrame = df_raw[df_raw['key_id'].isin(valid_keys)]
-        #df_noise: pd.DataFrame = pd.read_csv(self.noise_csv) if os.path.exists(self.noise_csv) else pd.DataFrame()
 
         key_samples: pd.DataFrame = df_clean[df_clean['key_id'] != 'unknown']
         df_unkn: pd.DataFrame = df_clean[df_clean['key_id'] == 'unknown']

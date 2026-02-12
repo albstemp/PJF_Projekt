@@ -1,9 +1,11 @@
+import os
+os.environ['KERAS_BACKEND'] = 'jax'
+
 import sounddevice as sd
 import numpy as np
 import librosa
-import os
 import pickle
-import tensorflow as tf
+import keras
 import threading
 import signal
 from cv2 import resize, INTER_CUBIC
@@ -24,7 +26,7 @@ class AcousticKeyPredictor:
     b: NDArray[np.float64]
     a: NDArray[np.float64]
     window_size: int
-    model: tf.keras.Model
+    model: keras.Model
     label_encoder: Any
 
     def __init__(self, model_dir: str = "model_output", fs: int = 48000, device_id: Optional[int] = None,
@@ -44,7 +46,7 @@ class AcousticKeyPredictor:
         model_path: str = os.path.join(model_dir, "acoustic_key_model.keras")
         encoder_path: str = os.path.join(model_dir, "label_encoder.pickle")
 
-        self.model = tf.keras.models.load_model(model_path)
+        self.model = keras.models.load_model(model_path)
         with open(encoder_path, "rb") as f:
             self.label_encoder = pickle.load(f)
 
